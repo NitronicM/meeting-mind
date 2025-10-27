@@ -1,0 +1,48 @@
+
+/* container */
+#container{
+    display: flex;
+    flex-direction: column;
+}
+
+/* landing page header */
+
+#landing-page-header{
+  /* background-color: #7DF9FF; */
+  height: 10vh;
+  max-height: 10vh;
+  background-color: #000080;
+  display: flex;
+  padding: 1%;
+}
+
+#get-started-btn{
+    background-color: #7DF9FF;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 0 0 0 auto;
+    cursor: pointer;
+}
+
+#header-title{
+    color: white;
+    margin: auto 0 auto 0;
+    font-size: larger;
+}
+
+
+/* landing page body */
+#landing-page-body{
+    height: 90vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #7DF9FF;
+}
+
+#landing-page-body{
+    color: #0A1F44;
+    font-size: xx-large;
+    margin: auto;
+}

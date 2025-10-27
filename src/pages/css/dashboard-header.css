@@ -1,0 +1,21 @@
+
+
+#btn-container {
+  height: 10vh;
+  max-height: 10vh;
+  background-color: #1E3A8A; /* deep indigo */
+  display: flex;
+  padding: 1%;
+  justify-content: center;
+  align-items: center;
+  gap: 5%;
+}
+
+#analyze-audio-btn, #audio-history-btn {
+  color: white;
+  width: 10%;
+  height: auto;
+  background-color: #3B82F6; /* vibrant blue */
+  border-radius: 5px;
+  padding: 5px;
+}
