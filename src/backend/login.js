@@ -9,6 +9,10 @@ import {User} from "./schemas/user.js";
 import {Session} from "./schemas/session.js"
 import {Audio} from "./schemas/audio.js"
 
+/**
+ * TODOS:
+ * - make sure that the session id generated don't clash
+ */
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +32,7 @@ console.log("connected");
 
 //to be changed
 const redirect_uri = "http://localhost:3000/google/callback"
-
+const tempSessionExpiry = 30000
 var testState = ""
 
 //handles preflight request
@@ -46,27 +50,86 @@ app.post("/check-session", async (req, res)=>{
         res.set("Access-Control-Allow-Credentials", true)
         res.set("Access-Control-Allow-Origin", "http://localhost:5173")
         const cookies = req.cookies
+        //case no session id
         if (cookies.session == null){
-            //this is the case when they are visiting for the first time or session expired
-            const id = crypto.randomUUID()
-            res.cookie("session", id, {
-                maxAge: 300000 //5 minutes
+            // const sessionId = crypto.randomUUID()
+            // const state = crypto.randomUUID()
+            // const nonce = crypto.randomUUID()
+            // await handleNoSession(sessionId, state, nonce)
+            // res.cookie("session", sessionId)
+            // res.send({isLoggedIn: false})
+            const values = await handleNoSession()
+            res.cookie("session", values[1], {
+                expires: values[2]
             })
-            // const session = new Session({
-            //     session_id: id,
-            //     expiry: Date.now() + 300000
-            // })
-            const session = await Session.create({
-                session_id: id,
-                expiry: Date.now() + 300000
+            res.send({isLoggedIn: values[0]})
+        }else if(cookies.session != null){ //case there is session id
+            const values = await handleSession(cookies.session)
+            res.cookie("session", values[1], {
+                expires: values[2]
             })
-            await session.save()
+            res.send({isLoggedIn: values[0]})
+        }else{
+            throw new Error("Issue with checking session server side")
         }
-        res.send("Session created")
     }catch(error){
+        res.status(400)
+        res.send({isLoggedIn: false, message: "Internal error"})
         console.log("Error creating session:", error);
     }
+})
 
+//handles the sessionid exists case
+//returns 3 values, stored in an array
+//first value (boolean) returns whether the user should be considered logged in
+//second value returns the new sessionId
+//third value returns the expiry
+async function handleSession(sessionId){
+    try{
+
+        const session = await Session.findOne({
+            sessionId: sessionId,
+            expiresAt: {$gt: Date.now()}
+        })
+
+        if (session != null){
+            //session is associated with an account
+            if (session.userId != null){
+                const newSessionId = crypto.randomUUID()
+                const expiry = new Date()
+                expiry.setDate(expiry.getDate() + 7)
+                session.updateOne({
+                    sessionId: newSessionId,
+                    expiresAt: expiry
+                })
+                return [true, newSessionId, expiry]
+            }else{
+                return [false, session.sessionId, session.expiresAt]
+            }
+        }else{
+            return await handleNoSession()
+        }
+    }catch(error){
+        console.error(error)
+    }
+}
+
+//creates a session in the database and returns the state and nonce tokens
+async function handleNoSession(){
+    const newSessionId = crypto.randomUUID()
+    const expiry = new Date(Date.now() + tempSessionExpiry);
+    const session = await Session.create({
+        userId: null,
+        sessionId: newSessionId,
+        expiresAt: expiry
+    })
+    return [false, newSessionId, expiry]
+}
+
+//for testing purposes
+app.get("/reset-sessions", async (req, res)=>{
+    await Session.deleteMany({})
+    res.send("Reset sessions collection")
 })
 
 // app.get("/create-session-get", (req, res)=>{

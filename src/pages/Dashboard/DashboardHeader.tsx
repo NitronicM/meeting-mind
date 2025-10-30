@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import "./css/dashboard-header.css"
+import "../css/dashboard-header.css"
 
 export default function DashboardHeader({current_tab} : {current_tab : Dispatch<SetStateAction<string>>}){
 

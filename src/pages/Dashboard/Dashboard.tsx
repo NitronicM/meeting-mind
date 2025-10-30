@@ -1,6 +1,6 @@
 import { useState } from "react";
-import AnalyzeAudio from "./AnalyzeAudio";
-import AudioHistory from "./AudioHistory";
+import AnalyzeAudio from "../AnalyzeAudio/AnalyzeAudio";
+import AudioHistory from "../AudioHistory/AudioHistory";
 import DashboardHeader from "./DashboardHeader";
 
 

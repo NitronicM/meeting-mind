@@ -1,6 +1,6 @@
 
 import useAuth from "./useAuth"
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import LandingPage from "../pages/LandingPage";
 
 export default async function AppRouter(){

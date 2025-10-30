@@ -1,7 +1,6 @@
 import { useState } from "react"
-import "./css/analyze-audio.css"
+import "../css/analyze-audio.css"
 import axios from "axios"
-import useAuth from "../helpers/useAuth";
 
 export default function AnalyzeAudio(){
 
