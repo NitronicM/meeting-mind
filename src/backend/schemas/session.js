@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const {Schema} = mongoose
 
 const sessionSchema = new Schema({
-    userId: {type: Schema.Types.ObjectId, ref: "User"},
+    userId: String,
     sessionId: String,
     expiresAt: {
         type: Date,
@@ -14,6 +14,7 @@ const sessionSchema = new Schema({
         value: String,
         isUsed: Boolean
     },
+    csrfToken: String,
 })
 
 export const Session = mongoose.model("Session", sessionSchema)

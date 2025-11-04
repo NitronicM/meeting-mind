@@ -13,7 +13,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = express()
-app.use(cors({ origin: "http://localhost:5173" }))
+const router = express.Router()
+router.use(cors({ origin: "http://localhost:5173" }))
 const port = 3001
 
 // const upload = multer({storage: multer.memoryStorage()})
@@ -29,19 +30,19 @@ const upload = multer({storage: fileStorage})
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 
-app.post("/analyze-file", upload.single("fileToAnalyze"), async (req, res)=>{
+router.post("/analyze-file", upload.single("fileToAnalyze"), async (req, res)=>{
     try{
-        console.log("Here0");
-        console.log("originalname: ", req.file.originalname);
-        console.log("path:", req.file.path);
+        // console.log("Here0");
+        // console.log("originalname: ", req.file.originalname);
+        // console.log("path:", req.file.path);
         const myfile = await ai.files.upload({
             file: req.file.path,
             config: { mimeType: req.file.mimetype },
         });
         const summary = await getAudioSummary(myfile)
         const transcript = await getAudioTranscript(myfile)
-        console.log("Summary:", summary);
-        console.log("Transcript:", transcript);
+        // console.log("Summary:", summary);
+        // console.log("Transcript:", transcript);
         fs.unlink(req.file.path, (error)=>{
             if (error){
                 console.error("Error removing file", error)
@@ -89,7 +90,4 @@ async function getAudioTranscript(file){
     }
 }
 
-
-app.listen(port, ()=>{
-    console.log("Listening on port", port);
-})
+export {router as googleApiRouter}

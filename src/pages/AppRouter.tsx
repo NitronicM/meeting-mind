@@ -6,27 +6,41 @@ import DashboardHeader from "./Dashboard/DashboardHeader";
 import AnalyzeAudio from "./AnalyzeAudio/AnalyzeAudio";
 import AudioHistory from "./AudioHistory/AudioHistory";
 
+const baseUrl = "http://localhost:3000/"
+
+function getHasSessionCookie(){
+    return document.cookie
+    .split("; ")
+    .some(c => c.trim().match("hasSession=1"));
+}
 
 export default function AppRouter(){
     // console.log("Here");
-    const baseUrl = "http://localhost:3000/"
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
-
+    const [isAuthenticated, setIsAuthenticated] = useState(getHasSessionCookie())
     useEffect(()=>{
-        console.log("Here");
+        // const loggedInCookie = Boolean(document.cookie.split(";")
+        // .find(c => c.startsWith("loggedin="))
+        // ?.split("=")[1]) || false
+        // setIsAuthenticated(loggedInCookie)
+        console.log("Checking session");
         const url = baseUrl + "check-session"
         axios.post(url, {}, {
             withCredentials: true
         }).then(response => {
-            console.log("response:", response.data);
+            console.log("response from check sessioon:", response.data);
             const isLoggedIn = response.data.isLoggedIn
-            setIsAuthenticated(isLoggedIn)
+            if (isLoggedIn){
+                document.cookie = "hasSession=1"
+            }else{
+                document.cookie = "hasSession=0"
+            }
+            setIsAuthenticated(getHasSessionCookie())
         })
     }, [])
 
     return(
         <div>
-            {isAuthenticated ? <Dashboard/> : <LandingPage/>}
+            {(isAuthenticated) ? <Dashboard/> : <LandingPage/>}
         </div>
     )
 }

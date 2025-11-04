@@ -18,7 +18,7 @@ export default function LandingPage() {
    * https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials
    */
   async function onGetStarted(){
-    const url = baseUrl + "check-session"
+    const url = baseUrl + "login"
     console.log(url);
     await axios.post(url, {
       //data to be sent
@@ -26,7 +26,8 @@ export default function LandingPage() {
       withCredentials: true
     })
     .then(response => {
-      console.log(response)
+      console.log("response after login:", response)
+      window.location.href = response.data.url
     })
     .catch(error => console.error("Error: ", error))
     // await axios.get(url + "-get", {
