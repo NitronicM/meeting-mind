@@ -1,11 +1,10 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const {Schema} = mongoose
 
 const userSchema = new Schema({
-    userId: Schema.Types.ObjectId,
+    userId: String,
     email: String,
-    username: String,
 })
 
 export const User = mongoose.model("User", userSchema)
