@@ -6,6 +6,10 @@ import express from "express"
 import multer from "multer";
 import cors from "cors"
 import fs from "fs"
+import { getObjectForGoogleUpload } from "./amazon_s3.js";
+import axios from "axios";
+import { checkIfAudioExists } from "./middlewares.js";
+import { Audio } from "./schemas/audio.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,46 +18,55 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = express()
 const router = express.Router()
-router.use(cors({ origin: "http://localhost:5173" }))
-const port = 3001
+// router.use(cors({ origin: "http://localhost:5173" }))
+
 
 // const upload = multer({storage: multer.memoryStorage()})
-const fileStorage = multer.diskStorage({
-    destination: (req, file, cb) =>{
-        cb(null, "./uploads")
-    },
-    filename: (req, file, cb) =>{
-        cb(null, file.originalname)
-    }
-})
-const upload = multer({storage: fileStorage})
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 
-router.post("/analyze-file", upload.single("fileToAnalyze"), async (req, res)=>{
+/**
+ * todos:
+ * - add checkIfAudioExists middleware back
+ * - add the transcript and summary to the database
+ */
+router.post("/analyze-file", checkIfAudioExists, async (req, res)=>{
     try{
-        // console.log("Here0");
-        // console.log("originalname: ", req.file.originalname);
-        // console.log("path:", req.file.path);
+        console.log("Getting file for google upload");
+        const presignedUrl = await getObjectForGoogleUpload(req.body.userId, req.body.fileName)
+        const response = await axios.get(presignedUrl, {
+            responseType: "arraybuffer"
+        })
+        //make type dynamic, should read from the database
+        const blob = new Blob([response.data], {type: "audio/mpeg"})
+        console.log("finished here");
+
+        // res.status(200).send({message: "Sent from google"})
+
         const myfile = await ai.files.upload({
-            file: req.file.path,
-            config: { mimeType: req.file.mimetype },
+            file: blob,
+            config: { mimeType:  "audio/mpeg"},
         });
         const summary = await getAudioSummary(myfile)
         const transcript = await getAudioTranscript(myfile)
-        // console.log("Summary:", summary);
-        // console.log("Transcript:", transcript);
-        fs.unlink(req.file.path, (error)=>{
-            if (error){
-                console.error("Error removing file", error)
+        const audio = Audio.findOne({
+            userId: req.body.userId
+        })
+        await audio.updateOne({
+            $set: {
+                summary: summary,
+                transcript: transcript
             }
         })
+        // console.log("Summary:", summary);
+        // console.log("Transcript:", transcript);
         res.send({  status: 200,
                     summary: summary,
                     transcript: transcript})
     }catch(error){
         console.log("Error", error);
-        res.send({status: 400, error: "Error getting summary"})
+        res.send({status: 500, error: "Error getting summary"})
     }
 })
 

@@ -5,12 +5,10 @@ export default function DashboardHeader({current_tab} : {current_tab : Dispatch<
 
     function changeToAnalyzeAudio(){
         current_tab("analyze_audio")
-        console.log(current_tab);
     }
 
     function changeToAudioHistory(){
         current_tab("audio_history")
-        console.log(current_tab);
     }
 
     return(

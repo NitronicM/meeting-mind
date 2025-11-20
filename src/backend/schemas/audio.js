@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const {Schema} = mongoose
 
 const audioSchema = new Schema({
-    userId: {type: Schema.Types.ObjectId, ref: "User"},
+    userId: String,
     name: String,
     dateAdded: Date,
     filePath: String, //stored in bucket
