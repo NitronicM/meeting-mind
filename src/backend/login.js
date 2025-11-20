@@ -78,6 +78,7 @@ router.post("/check-session", async (req, res)=>{
             res.send({isLoggedIn: values[0]})
         }else if(cookies.session != null){ //case there is session id
             const values = await handleSession(cookies.session)
+            // console.log(values);
             res.cookie("session", values[1], {
                 expires: values[2]
             })
@@ -109,7 +110,6 @@ async function handleSession(sessionId){
             sessionId: sessionId,
             expiresAt: {$gt: Date.now()}
         })
-        console.log("Session from handleSession:", session);
         if (session != null){
             return [session.userId != null, session.sessionId, session.expiresAt]
         }else{
@@ -213,7 +213,7 @@ router.post("/login", async (req, res)=>{
 
 /**
  * todos:
- * exchange the jwt for the user email, check if they are in the database and update
+ * check nonce token
  * session information accordingly, and make sure to update the state and nonce tokens
  */
 router.get("/google/callback", async (req, res)=>{

@@ -14,6 +14,10 @@ function getHasSessionCookie(){
     .some(c => c.trim().match("hasSession=1"));
 }
 
+/**
+ * todos:
+ * maybe add condition for useeffect including with buttons? like when they submit so they dont upload on invalid session
+ */
 export default function AppRouter(){
     // console.log("Here");
     const [isAuthenticated, setIsAuthenticated] = useState(getHasSessionCookie())
@@ -34,10 +38,9 @@ export default function AppRouter(){
             }else{
                 document.cookie = "hasSession=0"
             }
-            setIsAuthenticated(getHasSessionCookie())
+            setIsAuthenticated(isLoggedIn)
         })
     }, [])
-
     return(
         <div>
             {(isAuthenticated) ? <Dashboard/> : <LandingPage/>}

@@ -3,34 +3,54 @@ import "../css/analyze-audio.css"
 import axios from "axios"
 
 export default function AnalyzeAudio(){
-
-    const url = "http://localhost:3001/analyze-file"
-    const [file, setFile] = useState();
+    const axiosOptions = {
+        withCredentials: true
+    }
+    const baseUrl = "http://localhost:3000"
+    const url = "http://localhost:3000/analyze-file"
+    const [file, setFile] = useState<File | null>(null);
     const [summary, setSummary] = useState("")
     const [transcript, setTranscript] = useState()
     const [showSummary, setShowSummary] = useState(true)
 
+    /**
+     * todos: 
+     * - verify the filename before sending to backend, also check on backend
+     * - also make sure that the file type uploaded matches what's allowed
+     */
     const onFileUpload = async () => {
         try{
-            console.log("onFileUpload");
-		    const formData = new FormData();
-		    formData.append(
-			    "fileToAnalyze",
-                //@ts-ignore
-			    file,
-		    );
-		    console.log(file);
-		    await axios.post(url, formData)
-                            .then(response =>{
-                                console.log("data:",response.data);
-                                console.log("Summary:", response.data.summary);
-                                console.log("Transcript:", response.data.transcript);
-                                setSummary(response.data.summary)
-                                setTranscript(response.data.transcript)
-                            })
-                            .catch(error =>{
-                                console.error("Error getting summary", error)
-                            })
+            const getPresignedUrl = baseUrl + "/presigned-url"
+            const csrfToken = document.cookie.split("; ")
+                                    .find(c => c.startsWith("csrf_token="))
+                                    ?.split("=")[1] || null
+            const presignedUrlResponse = await axios.post(getPresignedUrl, {
+                csrfToken: csrfToken,
+                fileName: file?.name
+            }, axiosOptions)
+            //if the data already exists, we can just get summary and transcript from middleware and set that
+            if (presignedUrlResponse.data.exists){
+                setSummary(presignedUrlResponse.data.summary)
+                setTranscript(presignedUrlResponse.data.transcript)
+                console.log("returned in frontend");
+                return
+            }
+            //if no presigned url was returned then this would just fail
+            const bucketPutResponse = await axios.put(presignedUrlResponse.data.presignedUrl, file, {
+                headers: {
+                    "Content-Type": "audio/mpeg"
+                }
+            })
+            console.log(file);
+            const googleUrl = baseUrl + "/analyze-file"
+            const analysisResponse = await axios.post(googleUrl, {
+                csrfToken: csrfToken,
+                fileName: file?.name
+            }, axiosOptions)
+            setSummary(analysisResponse.data.summary)
+            setTranscript(analysisResponse.data.transcript)
+            console.log(analysisResponse.data);
+
         }catch (error){
             console.log("Error with file upload", error);
         }
