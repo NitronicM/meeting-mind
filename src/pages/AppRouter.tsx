@@ -6,7 +6,7 @@ import DashboardHeader from "./Dashboard/DashboardHeader";
 import AnalyzeAudio from "./AnalyzeAudio/AnalyzeAudio";
 import AudioHistory from "./AudioHistory/AudioHistory";
 
-const baseUrl = "http://localhost:3000/"
+const baseUrl = "http://localhost:3000"
 
 function getHasSessionCookie(){
     return document.cookie
@@ -27,7 +27,7 @@ export default function AppRouter(){
         // ?.split("=")[1]) || false
         // setIsAuthenticated(loggedInCookie)
         console.log("Checking session");
-        const url = baseUrl + "check-session"
+        const url = baseUrl + "/login/check-session"
         axios.post(url, {}, {
             withCredentials: true
         }).then(response => {

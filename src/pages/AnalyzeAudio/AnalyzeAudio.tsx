@@ -20,7 +20,7 @@ export default function AnalyzeAudio(){
      */
     const onFileUpload = async () => {
         try{
-            const getPresignedUrl = baseUrl + "/presigned-url"
+            const getPresignedUrl = baseUrl + "/s3/presigned-url"
             const csrfToken = document.cookie.split("; ")
                                     .find(c => c.startsWith("csrf_token="))
                                     ?.split("=")[1] || null
@@ -42,7 +42,7 @@ export default function AnalyzeAudio(){
                 }
             })
             console.log(file);
-            const googleUrl = baseUrl + "/analyze-file"
+            const googleUrl = baseUrl + "/google-api/analyze-file"
             const analysisResponse = await axios.post(googleUrl, {
                 csrfToken: csrfToken,
                 fileName: file?.name
