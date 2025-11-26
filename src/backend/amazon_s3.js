@@ -102,7 +102,7 @@ router.post("/presigned-url", checkIfAudioExists, async (req, res)=>{
     }
 })
 
-export async function getObjectForGoogleUpload(userId, fileName){
+export async function getObjectPresignedUrl(userId, fileName){
     const objectKey = userId + "/" + fileName
     // console.log("filename for get:", objectKey);
     const awsSts = new STSClient({
@@ -141,6 +141,48 @@ export async function getObjectForGoogleUpload(userId, fileName){
     })
     console.log("Finished getting presigned url for download");
     return url
+}
+
+export async function presignedDeleteObject(userId, fileName){
+    const objectKey = userId + "/" + fileName
+    // console.log("filename for get:", objectKey);
+    const awsSts = new STSClient({
+            credentials: {
+                accessKeyId: accessKey,
+                secretAccessKey: secretKey
+            },
+            region: awsStsRegion,
+        })
+        
+        
+    let tempCredentials
+    await awsSts.send(new GetSessionTokenCommand({
+        DurationSeconds: 900
+    })).then(response => {
+        // console.log("Temp:", response);
+        tempCredentials = response.Credentials
+    }).catch(error =>{
+        res.status(500).send({message: "Error getting presigned url"})
+        console.log("Error getting temp credentials:", error);
+    })
+    const s3Client = new S3Client({
+        credentials: {
+            accessKeyId: tempCredentials.AccessKeyId,
+            secretAccessKey: tempCredentials.SecretAccessKey,
+            sessionToken: tempCredentials.SessionToken
+        },
+        region: awsStsRegion
+    })
+
+    const command = new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: objectKey,
+    })
+
+    const presignedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 10
+    })
+    return presignedUrl
 }
 
 export {router as amazonS3Router}

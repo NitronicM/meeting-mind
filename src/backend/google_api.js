@@ -6,7 +6,7 @@ import express from "express"
 import multer from "multer";
 import cors from "cors"
 import fs from "fs"
-import { getObjectForGoogleUpload } from "./amazon_s3.js";
+import { getObjectPresignedUrl } from "./amazon_s3.js";
 import axios from "axios";
 import { checkIfAudioExists } from "./middlewares.js";
 import { Audio } from "./schemas/audio.js";
@@ -34,7 +34,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 router.post("/analyze-file", checkIfAudioExists, async (req, res)=>{
     try{
         console.log("Getting file for google upload");
-        const presignedUrl = await getObjectForGoogleUpload(req.body.userId, req.body.fileName)
+        const presignedUrl = await getObjectPresignedUrl(req.body.userId, req.body.fileName)
         const response = await axios.get(presignedUrl, {
             responseType: "arraybuffer"
         })
