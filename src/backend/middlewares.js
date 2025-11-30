@@ -39,17 +39,13 @@ export const verifyRequest = async function(req, res, next){
     }
 }
 
-/**
- * todos:
- * - add a check to see if the audio type is valid (audio only)
- */
+
 export async function checkIfAudioExists(req, res, next){
     try{
         if(!req.body.userId || !req.body.fileName){
             res.status(400).send({message: "No userid or filename provided"})
             return
         }
-        console.log("Middleware for checking audio called");
         const filePath = req.body.userId + "/" + req.body.fileName
         const audio = await Audio.findOne({
             userId: req.body.userId,
@@ -64,6 +60,11 @@ export async function checkIfAudioExists(req, res, next){
             console.log("Returned stored transcript + summary");
             return
         }else{
+            if(!String(req.body.fileName).toLowerCase().endsWith(".mp3")){
+                console.log("Incorrect file type");
+                res.status(400).send({message: "Incorrect file type"})
+                return
+            }
             console.log("Calling next in middleware");
             next()
         }
@@ -75,9 +76,7 @@ export async function checkIfAudioExists(req, res, next){
 
 export async function checkIfSessionIsValid(req, res, next){
     try{
-        console.log("middleware called");
         if (!req.cookies.session){
-            console.log("middleware returning early");
             res.status(400).send({messag: "Invalid session"})
             return
         }
@@ -86,7 +85,6 @@ export async function checkIfSessionIsValid(req, res, next){
             expiresAt: {$gt: Date.now()}
         })
         if(!session || !session.userId){
-            console.log("middleware returning early");
             res.status(403).send({message: "Access Denied"})
             return
         }

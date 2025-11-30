@@ -4,15 +4,10 @@ import path from "path"
 import dotenv from "dotenv"
 import {S3Client, 
         PutObjectCommand,
-        CreateBucketCommand,
         DeleteObjectCommand,
-        DeleteBucketCommand,
-        paginateListBuckets,
         GetObjectCommand} from "@aws-sdk/client-s3"
-import { Session } from "./schemas/session.js";
 import { GetSessionTokenCommand, STS, STSClient } from "@aws-sdk/client-sts";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
-import { User } from "./schemas/user.js";
 import { Audio } from "./schemas/audio.js";
 import { checkIfAudioExists } from "./middlewares.js";
 
@@ -25,11 +20,6 @@ const accessKey = process.env.AMAZON_ACCESS_KEY
 const secretKey = process.env.AMAZON_SECRET_ACCESS_KEY
 const awsStsRegion = process.env.AMAZON_STS_REGION
 
-/**
- * todos:
- * 
- * add middleware so that all routes are protected, should validate the session and csrf token
- */
 
 const router = express.Router()
 router.use(express.json())
@@ -37,18 +27,13 @@ router.use(express.json())
 const bucketName = process.env.BUCKET_NAME
 
 router.options("/presigned-url", (req, res)=>{
-    //request header for what the actual request may include, need to say browser is allowed to include content-type in header
     res.set('Access-Control-Allow-Headers', 'Content-Type')
     res.set("Access-Control-Allow-Credentials", true)
     res.set("Access-Control-Allow-Origin", "http://localhost:5173")
-    res.send("Set the stuff")
+    res.send("Preflight set for presigned url")
 })
 
-/**
- * todos:
- * - check if the file exists inside mongodb for that user
- * - store the filename in mongodb 
- */
+
 router.post("/presigned-url", checkIfAudioExists, async (req, res)=>{
     try{
         const awsSts = new STSClient({
@@ -58,7 +43,6 @@ router.post("/presigned-url", checkIfAudioExists, async (req, res)=>{
             },
             region: awsStsRegion,
         })
-        
         
         let tempCredentials
         await awsSts.send(new GetSessionTokenCommand({
@@ -88,23 +72,20 @@ router.post("/presigned-url", checkIfAudioExists, async (req, res)=>{
             userId: req.body.userId,
             name: req.body.fileName,
             dateAdded: Date.now(),
-            filePath: objectKey, //stored in bucket
+            filePath: objectKey,
         })
         const presigned = await getSignedUrl(s3Client, command, {
             expiresIn: 10,
         })
         res.send({presignedUrl: presigned})
-        console.log("Finished getting presigned url for upload");
     }catch(error){
-        console.log("Error with presigned url");
-        console.log(error);
-        res.status(500).send({message: "Internal server error"})
+        console.log("Error with presigned url", error);
+        res.status(500).send({message: "Internal server error with generating presigned url"})
     }
 })
 
 export async function getObjectPresignedUrl(userId, fileName){
     const objectKey = userId + "/" + fileName
-    // console.log("filename for get:", objectKey);
     const awsSts = new STSClient({
             credentials: {
                 accessKeyId: accessKey,
@@ -118,7 +99,6 @@ export async function getObjectPresignedUrl(userId, fileName){
     await awsSts.send(new GetSessionTokenCommand({
         DurationSeconds: 900
     })).then(response => {
-        // console.log("Temp:", response);
         tempCredentials = response.Credentials
     }).catch(error =>{
         res.status(500).send({message: "Error getting presigned url"})
@@ -139,13 +119,11 @@ export async function getObjectPresignedUrl(userId, fileName){
     const url = await getSignedUrl(s3Client, command, {
         expiresIn: 10
     })
-    console.log("Finished getting presigned url for download");
     return url
 }
 
 export async function presignedDeleteObject(userId, fileName){
     const objectKey = userId + "/" + fileName
-    // console.log("filename for get:", objectKey);
     const awsSts = new STSClient({
             credentials: {
                 accessKeyId: accessKey,
@@ -159,7 +137,6 @@ export async function presignedDeleteObject(userId, fileName){
     await awsSts.send(new GetSessionTokenCommand({
         DurationSeconds: 900
     })).then(response => {
-        // console.log("Temp:", response);
         tempCredentials = response.Credentials
     }).catch(error =>{
         res.status(500).send({message: "Error getting presigned url"})

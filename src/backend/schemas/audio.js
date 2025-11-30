@@ -6,7 +6,7 @@ const audioSchema = new Schema({
     userId: String,
     name: String,
     dateAdded: Date,
-    filePath: String, //stored in bucket
+    filePath: String,
     transcript: String,
     summary: String
 })

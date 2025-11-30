@@ -3,9 +3,6 @@ import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url";
 import express from "express"
-import multer from "multer";
-import cors from "cors"
-import fs from "fs"
 import { getObjectPresignedUrl } from "./amazon_s3.js";
 import axios from "axios";
 import { checkIfAudioExists } from "./middlewares.js";
@@ -16,33 +13,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
-const app = express()
 const router = express.Router()
-// router.use(cors({ origin: "http://localhost:5173" }))
 
-
-// const upload = multer({storage: multer.memoryStorage()})
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 
-/**
- * todos:
- * - add checkIfAudioExists middleware back
- * - add the transcript and summary to the database
- */
 router.post("/analyze-file", checkIfAudioExists, async (req, res)=>{
     try{
-        console.log("Getting file for google upload");
         const presignedUrl = await getObjectPresignedUrl(req.body.userId, req.body.fileName)
         const response = await axios.get(presignedUrl, {
             responseType: "arraybuffer"
         })
-        //make type dynamic, should read from the database
         const blob = new Blob([response.data], {type: "audio/mpeg"})
-        console.log("finished here");
-
-        // res.status(200).send({message: "Sent from google"})
 
         const myfile = await ai.files.upload({
             file: blob,
@@ -59,13 +42,11 @@ router.post("/analyze-file", checkIfAudioExists, async (req, res)=>{
                 transcript: transcript
             }
         })
-        // console.log("Summary:", summary);
-        // console.log("Transcript:", transcript);
         res.send({  status: 200,
                     summary: summary,
                     transcript: transcript})
     }catch(error){
-        console.log("Error", error);
+        console.log("Error wth google api", error);
         res.send({status: 500, error: "Error getting summary"})
     }
 })

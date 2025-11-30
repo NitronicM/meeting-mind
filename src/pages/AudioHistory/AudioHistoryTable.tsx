@@ -57,7 +57,7 @@ const AudioHistoryTable: React.FC<AudioHistoryTableProps> = ({
     if (onDownload) {
       onDownload(item);
     } else {
-      console.log('Download clicked for:', item);
+      console.log("Error downloading");
     }
   };
 
@@ -65,7 +65,7 @@ const AudioHistoryTable: React.FC<AudioHistoryTableProps> = ({
     if (onDelete) {
       onDelete(item);
     } else {
-      console.log('Delete clicked for:', item);
+      console.log("Error deleting");
     }
   };
 

@@ -22,14 +22,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 
-/**
- * todos:
- * write middleware so that the amazons3Router and googleApiRouter check the session and stuff
- * refactor literally everything and clean it all up
- */
 
-
-app.use("/login", loginRouter)
+app.use("/auth", loginRouter)
 app.use("/s3", verifyRequest, amazonS3Router)
 app.use("/google-api", verifyRequest, googleApiRouter)
 app.use("/audios", audioStorageRouter)

@@ -21,7 +21,6 @@ export default function AudioHistory(){
                 withCredentials: true
             })
             setAudios(response.data.audios)
-            console.log(audios);
         }catch(error){
             console.log("Error getting audios:", error);
         }
@@ -48,11 +47,9 @@ export default function AudioHistory(){
             const presignedResponse = await axios.get(url, {
                 withCredentials: true
             })
-            console.log(presignedResponse.data.presignedUrl);
             const response = await axios.get(presignedResponse.data.presignedUrl, {
                 responseType: "blob"
             })
-            console.log(response.data);
             saveAs(response.data, item.name)
         }catch(error){
             console.log("Error downloading audio:", error);

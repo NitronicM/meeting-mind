@@ -10,12 +10,6 @@ import {Session} from "./schemas/session.js"
 import {Audio} from "./schemas/audio.js"
 import axios from "axios";
 
-/**
- * TODOS:
- * - make sure that the session id generated don't clash
- * - set the appropriate cookie settings (httpOnly, etc) for relevant cookies (e.g: sessionId httpOnly, csrfToken not httpOnly)
- * - create a hash for the cookies
- */
 
 const router = express.Router()
 const __filename = fileURLToPath(import.meta.url);
@@ -26,30 +20,24 @@ const app = express()
 
 const port = 3000
 
-// router.use(cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-//     allowedHeaders: "Content-Type"
-// }))
 router.use(cookieParser())
 
 const mongoConnectionUrl = process.env.MONGODB_CONNECTION_URL
-console.log("connecting");
-await mongoose.connect(mongoConnectionUrl)
-console.log("connected");
 
-//to be changed
-const redirect_uri = "http://localhost:3000/google/callback"
-const tempSessionExpiry = 3600000 //1 hour
-var testState = ""
+try{
+    await mongoose.connect(mongoConnectionUrl)
+}catch(error){
+    console.log("Error connecting with mongoose", error);
+}
 
-// handles preflight request
+const redirect_uri = "http://localhost:3000/auth/google/callback"
+const tempSessionExpiry = 3600000
+
+
 router.options("/check-session", (req, res)=>{
-    //request header for what the actual request may include, need to say browser is allowed to include content-type in header
     res.set('Access-Control-Allow-Headers', 'Content-Type')
     res.set("Access-Control-Allow-Credentials", true)
     res.set("Access-Control-Allow-Origin", "http://localhost:5173")
-    res.send("Set the stuff")
 })
 
 
@@ -58,17 +46,13 @@ router.post("/check-session", async (req, res)=>{
         res.set("Access-Control-Allow-Credentials", true)
         res.set("Access-Control-Allow-Origin", "http://localhost:5173")
         const cookies = req.cookies
-        //case no session id
         if (cookies.session == null){
-            // const sessionId = crypto.randomUUID()
-            // const state = crypto.randomUUID()
-            // const nonce = crypto.randomUUID()
-            // await handleNoSession(sessionId, state, nonce)
-            // res.cookie("session", sessionId)
-            // res.send({isLoggedIn: false})
             const values = await handleNoSession()
             res.cookie("session", values[1], {
-                expires: values[2]
+                expires: values[2],
+                httpOnly: true,
+                sameSite: "lax",
+                secure: true
             })
             if(values[0]){
                 res.cookie("hasSession", "1")
@@ -76,11 +60,13 @@ router.post("/check-session", async (req, res)=>{
                 res.clearCookie("hasSession")
             }
             res.send({isLoggedIn: values[0]})
-        }else if(cookies.session != null){ //case there is session id
+        }else if(cookies.session != null){
             const values = await handleSession(cookies.session)
-            // console.log(values);
             res.cookie("session", values[1], {
-                expires: values[2]
+                expires: values[2],
+                httpOnly: true,
+                sameSite: "lax",
+                secure: true
             })
             if(values[0]){
                 res.cookie("hasSession", "1")
@@ -132,21 +118,6 @@ async function handleNoSession(){
     return [false, newSessionId, expiry]
 }
 
-//for testing purposes
-router.get("/reset-sessions", async (req, res)=>{
-    await Session.deleteMany({})
-    res.send("Reset sessions collection")
-})
-
-// router.get("/create-session-get", (req, res)=>{
-//     res.set("Access-Control-Allow-Credentials", true)
-//     res.set("Access-Control-Allow-Origin", "http://localhost:5173")
-//     res.cookie("from", "get")
-//     // res.set("Set-Cookie", "name=madhav")
-//     res.send("hopefully its set")
-// })
-
-
 /**
  * need a state token here because it verifies that /login started the auth flow,
  * if there is no state token, the attacker could call /google/callback immediately and pass in their
@@ -162,32 +133,23 @@ router.get("/reset-sessions", async (req, res)=>{
 
 
 router.options("/login", (req, res)=>{
-    // console.log("Optioning it rn");
     res.set('Access-Control-Allow-Headers', 'Content-Type')
     res.set("Access-Control-Allow-Credentials", true)
     res.set("Access-Control-Allow-Origin", "http://localhost:5173")
     res.send("Preflighted login")
 })
 
-/**
- * need a nonce token because it ensures that the code is only used once, if the code is intercepted, it will not
- * be traded for a user email and create a new session, because it means the code has been used or compromised
- */
+
 router.post("/login", async (req, res)=>{
     try{
-        // console.log("Logging in backend");
         res.set("Access-Control-Allow-Credentials", true)
         res.set("Access-Control-Allow-Origin", "http://localhost:5173")
-        // console.log("Logging in");
         const cookies = req.cookies
         const stateToken = crypto.randomUUID();
         const nonce = crypto.randomUUID();
         const currentSession = await Session.findOne({
             sessionId: cookies.session
         })
-        // console.log("currentSession:", currentSession);
-        //binds state to session
-        //need to hash this before storing in database
         await currentSession.updateOne({
             $set: {
                 state: stateToken,
@@ -211,13 +173,8 @@ router.post("/login", async (req, res)=>{
 })
 
 
-/**
- * todos:
- * check nonce token
- * session information accordingly, and make sure to update the state and nonce tokens
- */
+
 router.get("/google/callback", async (req, res)=>{
-    //currently going back to the homepage
     try{
         const returnedState = req.query.state
         const cookies = req.cookies
@@ -226,13 +183,14 @@ router.get("/google/callback", async (req, res)=>{
         })
         if(session.state != returnedState){
             console.log("State mismatched");
-            res.status(400).send({error: "Rejected due to state mismatch"})
+            res.status(400).send({error: "Rejected due to state/nonce mismatch"})
+            return
         }
         const response = await axios.post("https://oauth2.googleapis.com/token", {
             code: req.query.code,
             client_id: process.env.GOOGLE_CLIENT_ID,
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: "http://localhost:3000/google/callback",
+            redirect_uri: "http://localhost:3000/auth/google/callback",
             grant_type: "authorization_code"
         })
         const jwt = response.data.id_token.split(".")
@@ -261,11 +219,18 @@ router.get("/google/callback", async (req, res)=>{
             csrfToken: csrfToken
         })
         res.cookie("session", loggedInSession, {
-            expires: expiry
+            expires: expiry,
+            httpOnly: true,
+            sameSite: "lax",
+            secure: true
         })
-        res.cookie("csrf_token", csrfToken)
+        res.cookie("csrf_token", csrfToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            secure: true
+        })
         res.cookie("hasSession", "1")
-        res.redirect("http://localhost:5173") //this should automatically check the session and log in
+        res.redirect("http://localhost:5173")
         }catch(error){
             console.log("Error:", error);
         }

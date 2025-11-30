@@ -1,6 +1,5 @@
 import express from "express"
 import { checkIfSessionIsValid, verifyRequest } from "./middlewares.js"
-import { Session } from "./schemas/session.js"
 import { Audio } from "./schemas/audio.js"
 import { getObjectPresignedUrl, presignedDeleteObject } from "./amazon_s3.js"
 import axios from "axios"
@@ -39,7 +38,6 @@ router.get("/presigned-audio-download", checkIfSessionIsValid, async(req, res)=>
     res.status(200).send({presignedUrl: presignedUrl})
 })
 
-//change url to something less stupid
 router.delete("/audio", verifyRequest, async (req, res) => {
     try{
         const objectKey = req.body.userId + "/" + req.body.fileName
