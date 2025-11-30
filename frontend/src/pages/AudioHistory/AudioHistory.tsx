@@ -31,7 +31,7 @@ export default function AudioHistory(){
         const csrfToken = document.cookie.split("; ")
                                 .find(c => c.startsWith("csrf_token="))
                                 ?.split("=")[1] || null
-        const response = await axios.delete(url, {
+        await axios.delete(url, {
             data: {
                 csrfToken: csrfToken,
                 fileName: item.name

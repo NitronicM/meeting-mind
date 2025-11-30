@@ -6,8 +6,7 @@ export default function AnalyzeAudio(){
     const axiosOptions = {
         withCredentials: true
     }
-    const baseUrl = "http://localhost:3000"
-    const url = "http://localhost:3000/analyze-file"
+    const baseUrl = import.meta.env.VITE_BASE_URL
     const [file, setFile] = useState<File | null>(null);
     const [summary, setSummary] = useState("")
     const [transcript, setTranscript] = useState()
@@ -19,7 +18,6 @@ export default function AnalyzeAudio(){
             const csrfToken = document.cookie.split("; ")
                                     .find(c => c.startsWith("csrf_token="))
                                     ?.split("=")[1] || null
-            console.log(csrfToken);
             const presignedUrlResponse = await axios.post(getPresignedUrl, {
                 csrfToken: csrfToken,
                 fileName: file?.name
@@ -34,6 +32,9 @@ export default function AnalyzeAudio(){
                     "Content-Type": "audio/mpeg"
                 }
             })
+            if(!(bucketPutResponse.status >= 200 && bucketPutResponse.status < 400)){
+                return
+            }
             const googleUrl = baseUrl + "/google-api/analyze-file"
             const analysisResponse = await axios.post(googleUrl, {
                 csrfToken: csrfToken,
@@ -46,11 +47,6 @@ export default function AnalyzeAudio(){
             console.log("Error with file upload", error);
         }
 	};
-
-    const buttons = [
-        {name: "Summary"},
-        {name: "Transcript"},
-    ]
 
     return (
         <div className="outer-div">
@@ -78,8 +74,8 @@ export default function AnalyzeAudio(){
             </div>
             <div id="analysis-container">
                 <div id="btns-container">
-                    <button onClick={(e)=>setShowSummary(true)} className="analyze-options-btns">Summary</button>
-                    <button onClick={(e)=>setShowSummary(false)} className="analyze-options-btns">Transcript</button>
+                    <button onClick={()=>setShowSummary(true)} className="analyze-options-btns">Summary</button>
+                    <button onClick={()=>setShowSummary(false)} className="analyze-options-btns">Transcript</button>
                 </div>
                 <textarea id="analysis-output" rows={10} cols={20} disabled value={showSummary ? summary : transcript}></textarea>
             </div>

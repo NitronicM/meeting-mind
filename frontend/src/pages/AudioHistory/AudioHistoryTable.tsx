@@ -14,33 +14,6 @@ interface AudioHistoryTableProps {
   onDelete?: (item: AudioItem) => void;
 }
 
-const sampleAudioItems: AudioItem[] = [
-  {
-    id: 1,
-    name: 'Team Standup - Nov 10',
-    dateAdded: '2025-11-10',
-    transcript:
-      'Today we discussed the sprint goals, blockers with the auth service, and planned the next deployment window. Action items include finishing the login refactor and setting up staging for the next deploy...',
-    summary: 'Sprint planning, auth blockers, and deployment window.',
-  },
-  {
-    id: 2,
-    name: 'Client Call - Onboarding',
-    dateAdded: '2025-11-09',
-    transcript:
-      'The client walked through their current workflow and highlighted pain points around manual data entry and inconsistent follow-ups. They want automation around reminders and templates for messages...',
-    summary: 'Client onboarding flow + main pain points.',
-  },
-  {
-    id: 3,
-    name: 'Lecture - Distributed Systems',
-    dateAdded: '2025-11-05',
-    transcript:
-      'We covered consensus algorithms, focusing on Raft and its log replication guarantees, leader election, and how the system handles failures across multiple nodes in a cluster. We also compared it briefly to Paxos...',
-    summary: 'Consensus, Raft basics, and leader election.',
-  },
-];
-
 type ExpandedField = 'transcript' | 'summary' | null;
 
 const AudioHistoryTable: React.FC<AudioHistoryTableProps> = ({

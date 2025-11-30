@@ -1,14 +1,13 @@
 import "./css/landing-page.css"
 import "../index.css"
-import { useEffect } from "react"
 import axios from "axios"
 
-const login_url = "http://localhost:3000/auth/login"
-const baseUrl = "http://localhost:3000/"
+const baseUrl = import.meta.env.VITE_BASE_URL
 
 export default function LandingPage() {
 
   async function onGetStarted(){
+    const login_url = baseUrl + "/auth/login"
     await axios.post(login_url, {
     }, {
       withCredentials: true

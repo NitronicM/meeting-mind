@@ -2,9 +2,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import LandingPage from "./LandingPage";
 import Dashboard from "./Dashboard/Dashboard";
-import DashboardHeader from "./Dashboard/DashboardHeader";
-import AnalyzeAudio from "./AnalyzeAudio/AnalyzeAudio";
-import AudioHistory from "./AudioHistory/AudioHistory";
 
 const baseUrl = "http://localhost:3000"
 
