@@ -10,8 +10,6 @@ export const verifyRequest = async function(req, res, next){
         if (req.method != "GET"){
             const cookies = req.cookies
             const sessionId = cookies.session
-            console.log("cookies:", req.cookies);
-            console.log("session:", req.cookies.session);
             if (!sessionId){
                 res.status(403).send({message: "Access denied - first"})
                 return
@@ -57,15 +55,12 @@ export async function checkIfAudioExists(req, res, next){
                 transcript: audio.transcript,
                 summary: audio.summary
             })
-            console.log("Returned stored transcript + summary");
             return
         }else{
             if(!String(req.body.fileName).toLowerCase().endsWith(".mp3")){
-                console.log("Incorrect file type");
                 res.status(400).send({message: "Incorrect file type"})
                 return
             }
-            console.log("Calling next in middleware");
             next()
         }
     }catch(error){

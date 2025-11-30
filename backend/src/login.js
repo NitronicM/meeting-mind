@@ -225,7 +225,6 @@ router.get("/google/callback", async (req, res)=>{
             secure: true
         })
         res.cookie("csrf_token", csrfToken, {
-            httpOnly: true,
             sameSite: "strict",
             secure: true
         })

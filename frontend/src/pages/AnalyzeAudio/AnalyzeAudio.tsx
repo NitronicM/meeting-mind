@@ -19,6 +19,7 @@ export default function AnalyzeAudio(){
             const csrfToken = document.cookie.split("; ")
                                     .find(c => c.startsWith("csrf_token="))
                                     ?.split("=")[1] || null
+            console.log(csrfToken);
             const presignedUrlResponse = await axios.post(getPresignedUrl, {
                 csrfToken: csrfToken,
                 fileName: file?.name

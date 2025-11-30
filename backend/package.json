@@ -1,0 +1,23 @@
+{
+  "name": "meeting-mind",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.925.0",
+    "@aws-sdk/client-sts": "^3.929.0",
+    "@aws-sdk/s3-request-presigner": "^3.931.0",
+    "@google/genai": "^1.18.0",
+    "axios": "^1.11.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.2",
+    "nodemon": "^3.1.10"
+  },
+  "devDependencies": {
+  }
+}
