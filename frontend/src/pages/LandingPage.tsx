@@ -23,7 +23,7 @@ export default function LandingPage() {
       <div id="landing-page-header">
         <h1 id="header-title">Meeting Mind</h1>
         <button onClick={onGetStarted} id="get-started-btn">
-          Get started
+          Get started - edited
           </button>
       </div>
       <div id="landing-page-body">
