@@ -8,6 +8,7 @@ export default function LandingPage() {
 
   async function onGetStarted(){
     const login_url = baseUrl + "/auth/login"
+    console.log("base:",baseUrl);
     await axios.post(login_url, {
     }, {
       withCredentials: true
@@ -23,7 +24,7 @@ export default function LandingPage() {
       <div id="landing-page-header">
         <h1 id="header-title">Meeting Mind</h1>
         <button onClick={onGetStarted} id="get-started-btn">
-          Get started - edited
+          Get started
           </button>
       </div>
       <div id="landing-page-body">
